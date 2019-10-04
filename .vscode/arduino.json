@@ -1,0 +1,5 @@
+{
+    "board": "arduino:avr:leonardo",
+    "sketch": "ArduinoCodeForFLSBP\\ArduinoCodeForFLSBP.ino",
+    "port": "COM6"
+}

@@ -8,18 +8,18 @@
  * GND    <----->  GND
  * 5v     <----->  VCC
  * 0(RX)  <----->  TX
- *         -----   STM32            
+ *         -----   STM32
  *        <----->  TX
  *        <----->  RX
  */
-SoftwareSerial servoSerial(2,3);  //RX, TX
+SoftwareSerial servoSerial(9,10);  //RX, TX
 
 float pitch, roll;
 String comdata = "";
 int method_type = 0, command_verify = 0, degradation_failure = 0, time_flag = 1;
 String   stuck_leg = "NO";
-float stuck_angle = 0.0, stuck_time = 0.0;
-unsigned long start_time, now_time, dtime;
+float stuck_angle = 0.0;
+unsigned long start_time, now_time, dtime,stuck_time ;
 
 int s1_ini = 1500, s2_ini = 1550, s5_ini = 1400, s6_ini = 1300;
 int s3_ini = 1550, s4_ini = 1250, s7_ini = 1450, s8_ini = 1550;
@@ -42,11 +42,12 @@ void get_attitude(){
 }
 //获取上位机命令
 void get_command(){
-  comdata = "";
+  String comdata = "";
   while (Serial.available() > 0){
     comdata += char(Serial.read());
     delay(2);
   }
+
   if (comdata[0] == 'S' && comdata[-1] == 'E'){
     command_verify == 1;// 开始
   }
@@ -60,10 +61,15 @@ void get_command(){
 //上位机命令字符串解算
 void command_decomposite(){
   method_type = (int)comdata[1];
-  stuck_leg = comdata[2:4];
   degradation_failure = comdata[-2];
-  stuck_angle = (float)comdata[4:6]+0.1*(float)comdata[6:8];
-  stuck_time = (unsigned long)comdata[8:9]+0.1*(unsigned long)comdata[9:10];  
+  stuck_leg = comdata.substring(2,4);
+  stuck_angle = 10*(comdata[4]-'0')+(comdata[5]-'0')+0.1*(comdata[6]-'0')+0.01*(comdata[7]-'0');
+  stuck_time = (comdata[8]-'0')+0.1*(comdata[9]-'0');
+  // stuck_angle = (float)comdata.substring(4,6)+0.1*(float)comdata.substring(6,8);
+  // stuck_time = (unsigned long)comdata.substring(8,9)+0.1*(unsigned long)comdata.substring(9,10);
+  // stuck_leg = comdata[2]+comdata[3]; //[2:4];
+  // stuck_angle = (float)comdata[4:6]+0.1*(float)comdata[6:8];
+  // stuck_time = (unsigned long)comdata[8:9]+0.1*(unsigned long)comdata[9:10];
 }
 //舵机动作位置限幅
 void servo_limiting(){
@@ -91,19 +97,18 @@ void servo_command_send(){
     servoSerial.println("#005P"+String(s5)+"T1000!");   servoSerial.println("#006P"+String(s6)+"T1000!");  //s5 s6
     servoSerial.println("#003P"+String(s3)+"T1000!");   servoSerial.println("#004P"+String(s4)+"T1000!");  //s3 s4
     servoSerial.println("#007P"+String(s7)+"T1000!");   servoSerial.println("#008P"+String(s8)+"T1000!");  //s7 s8
-   
 }
-//ladrc 
+//ladr
 //int LADRC(double v){
-//   
+// 
 //}
 //舵机控制
 void control_servo(unsigned long stuck_time, String stuck_leg){
   int stuck_pwm;
   now_time = micros();
   dtime = now_time - start_time;
-  s1 = s1 + Output_r;   s2 = s2 + Output_r;   s5 = s5 + Output_r;   s6 = s6 + Output_r;
-  s3 = s3 + Output_p;   s4 = s4 + Output_p;   s7 = s7 + Output_p;   s8 = s8 + Output_p; 
+  s1 = s1 + Output_r;   s2 = s2 + Output_r;   s5 = s5 - Output_r;   s6 = s6 - Output_r;
+  s3 = s3 + Output_p;   s4 = s4 + Output_p;   s7 = s7 - Output_p;   s8 = s8 - Output_p; 
   if (dtime > stuck_time){   
     stuck_pwm = int(stuck_angle/360*3000);
     if (stuck_leg == "P1"){
@@ -134,7 +139,6 @@ void setup() {
   myPIDr.SetOutputLimits(-200,200);
   myPIDr.SetMode(AUTOMATIC);
   myPIDr.SetSampleTime(100);
-
   s1 = s1_ini;  s2 = s2_ini;  s3 = s3_ini;  s4 = s4_ini;  
   s5 = s5_ini;  s6 = s6_ini;  s7 = s7_ini;  s8 = s8_ini;
 }
@@ -143,7 +147,6 @@ void loop() {
   get_attitude();
   get_command();
   command_decomposite();
-  
   if (command_verify == 1){
     if (time_flag == 1){
       start_time = micros();
