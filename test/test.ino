@@ -152,40 +152,47 @@ void loop() {
 //  delay(1500);
 //  servoSerial.println("#003P1600T1000!");
 //  delay(1500);
-  get_attitude();
+//  get_attitude();
   get_command();
-  if (command_verify == 1){
-    command_decomposite();
-    if (time_flag == 1){
-      start_time = micros();
-      time_flag = 0;
-    }
-    switch (method_type){
-      case 0:
-        Input_p = pitch;
-        myPIDp.Compute();
-        Input_r = roll;
-        myPIDr.Compute();
-        break;
-//      case 1:
-////        ADRC;
+  Serial.println("++++++++");
+  delay(1500);
+  Serial.println(comdata);
+  delay(3000);
+  Serial.println("---");
+  delay(1500);
+  
+//  if (command_verify == 1){
+//    command_decomposite();
+//    if (time_flag == 1){
+//      start_time = micros();
+//      time_flag = 0;
+//    }
+//    switch (method_type){
+//      case 0:
+//        Input_p = pitch;
+//        myPIDp.Compute();
+//        Input_r = roll;
+//        myPIDr.Compute();
 //        break;
-//      case 2:
-////        MADRC
-//        break;
-    }
-    control_servo(stuck_time, stuck_leg);
-    servo_command_send();
-  }
-  else if(command_verify == 2){
-    servo_command_send();
-  }
-  else if(command_verify == 3){
-    s1 = s1_ini;  s2 = s2_ini;  s3 = s3_ini;  s4 = s4_ini;
-    s5 = s5_ini;  s6 = s6_ini;  s7 = s7_ini;  s8 = s8_ini;
-    servo_command_send();
-  }
-  delay(50);
+////      case 1:
+//////        ADRC;
+////        break;
+////      case 2:
+//////        MADRC
+////        break;
+//    }
+//    control_servo(stuck_time, stuck_leg);
+//    servo_command_send();
+//  }
+//  else if(command_verify == 2){
+//    servo_command_send();
+//  }
+//  else if(command_verify == 3){
+//    s1 = s1_ini;  s2 = s2_ini;  s3 = s3_ini;  s4 = s4_ini;
+//    s5 = s5_ini;  s6 = s6_ini;  s7 = s7_ini;  s8 = s8_ini;
+//    servo_command_send();
+//  }
+//  delay(50);
 }
 
 // JY61串口中断
